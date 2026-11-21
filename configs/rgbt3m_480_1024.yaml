@@ -1,0 +1,21 @@
+# 1024 张训练、256 张验证的原始分辨率实验配置。
+# 用于观察输入分辨率提高后模型在较大样本上的训练稳定性。
+name: RGBT-3M
+path: /path/to/RGBT-3M
+train: train_1024.txt
+val: val_256.txt
+nc: 2
+names: {0: fire, 1: person}
+input_channels: 6
+input_mode: dual_input
+rgb_dir: RGB
+thermal_dir: IR
+label_dir: labels_fire_person
+image_ext: .jpg
+img_size: [480, 640]
+format: yolo
+resolution_ratio: 1
+rgb_size: [480, 640]
+ir_size: [480, 640]
+ir_interpolation: area
+ir_antialias: true

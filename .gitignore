@@ -1,0 +1,42 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+*.egg-info/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local runtime configuration and dataset caches
+.dataset_cache/
+.yolo/
+.yolo_config/
+.matplotlib/
+*.cache
+*.cache.npy
+.env
+.env.*
+
+# Training outputs and large model artifacts
+runs/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.weights
+
+# Temporary exports and local demo outputs
+demo/output/
+demo/*.jpg
+demo/*.png

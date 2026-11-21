@@ -1,0 +1,22 @@
+# 2:1 跨分辨率小规模流程验证：RGB 原分辨率，IR 宽高各减半。
+# 仅用于先跑通 train -> val -> best.pt -> test，不作为论文最终结果。
+name: RGBT-3M
+path: /path/to/RGBT-3M
+train: splits/train_grouped_smoke.txt
+val: splits/val_grouped_smoke.txt
+test: splits/test_grouped_smoke.txt
+nc: 2
+names: {0: fire, 1: person}
+input_channels: 6
+input_mode: dual_input
+rgb_dir: RGB
+thermal_dir: IR
+label_dir: labels_fire_person
+image_ext: .jpg
+img_size: [480, 640]
+format: yolo
+resolution_ratio: 2
+rgb_size: [480, 640]
+ir_size: [240, 320]
+ir_interpolation: area
+ir_antialias: true

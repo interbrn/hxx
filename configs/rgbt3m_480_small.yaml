@@ -1,0 +1,21 @@
+# 原始分辨率小规模测试：用于确认目标清晰后模型是否开始产生有效检测。
+# 不是论文最终实验配置。
+name: RGBT-3M
+path: /path/to/RGBT-3M
+train: splits/train_128.txt
+val: splits/val_64.txt
+nc: 2
+names: {0: fire, 1: person}
+input_channels: 6
+input_mode: dual_input
+rgb_dir: RGB
+thermal_dir: IR
+label_dir: labels_fire_person
+image_ext: .jpg
+img_size: [480, 640]
+format: yolo
+resolution_ratio: 1
+rgb_size: [480, 640]
+ir_size: [480, 640]
+ir_interpolation: area
+ir_antialias: true

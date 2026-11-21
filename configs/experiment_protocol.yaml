@@ -1,0 +1,47 @@
+# RGBT-3M 统一实验参数协议（参数模板，不直接启动训练）
+# 所有模型结构实验只切换 --model 和数据配置中的 resolution_ratio，
+# 其余训练参数尽量保持一致，避免把训练策略差异误判成融合模块效果。
+
+project: runs/detect
+data_root: /path/to/RGBT-3M
+imgsz: [480, 640]
+seed: 0
+
+smoke:
+  epochs: 2
+  batch: 1
+  nbs: 1
+  workers: 0
+  device: cpu
+  optimizer: AdamW
+  lr0: 0.001
+  lrf: 0.01
+  weight_decay: 0.0005
+  warmup_epochs: 1
+  cos_lr: false
+  augmentation: none
+  no_aux: true
+
+formal_gpu:
+  epochs: 100
+  # batch 按显存调整；nbs 保持 64，便于不同显存条件下比较。
+  batch: 16
+  nbs: 64
+  workers: 4
+  device: 0
+  optimizer: AdamW
+  lr0: 0.001
+  lrf: 0.01
+  weight_decay: 0.0005
+  warmup_epochs: 3
+  cos_lr: true
+  augmentation: nonmosaic
+  no_aux: true
+  aux_weight: 0.25
+
+# 说明：辅助损失先关闭作为主实验基线；如需研究辅助监督影响，
+# 单独增加一个 use-aux 消融，不要与融合结构实验同时改变。
+
+# train.py 中可直接选择的实验模式：
+# rgb / ir / ratio1_concat / ratio1_gated /
+# ratio2_concat / ratio2_simple / ratio2_adapter / ratio2_gated / hierafire

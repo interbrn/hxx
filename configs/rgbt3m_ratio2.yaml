@@ -1,0 +1,20 @@
+# RGBT-3M paired 2:1 RGB/IR resolution experiment.
+name: RGBT-3M
+path: /path/to/RGBT-3M
+train: train.txt
+val: val.txt
+nc: 2
+names: {0: fire, 1: person}
+input_channels: 6
+input_mode: dual_input
+rgb_dir: RGB
+thermal_dir: IR
+label_dir: labels_fire_person
+image_ext: .jpg
+img_size: [480, 640]
+format: yolo
+resolution_ratio: 2
+rgb_size: [480, 640]
+ir_size: [240, 320]
+ir_interpolation: area
+ir_antialias: true

@@ -1,0 +1,21 @@
+# 诊断配置：训练集和验证集故意使用同一组四张图。
+# 只用于检查模型是否能够记住训练样本，不用于论文实验。
+name: RGBT-3M
+path: /path/to/RGBT-3M
+train: splits/debug_train_4.txt
+val: splits/debug_train_4.txt
+nc: 2
+names: {0: fire, 1: person}
+input_channels: 6
+input_mode: dual_input
+rgb_dir: RGB
+thermal_dir: IR
+label_dir: labels_fire_person
+image_ext: .jpg
+img_size: [480, 640]
+format: yolo
+resolution_ratio: 1
+rgb_size: [480, 640]
+ir_size: [480, 640]
+ir_interpolation: area
+ir_antialias: true

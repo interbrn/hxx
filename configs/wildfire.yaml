@@ -1,0 +1,20 @@
+# Uses the same paired loader as RGBT-3M, with one fire class.
+name: RGB-Thermal Wildfire
+path: /path/to/RGB-T-Wildfire
+train: train.txt
+val: val.txt
+nc: 1
+names: {0: fire}
+input_channels: 6
+input_mode: dual_input
+rgb_dir: RGB
+thermal_dir: IR
+label_dir: labels
+image_ext: .png
+img_size: [512, 640]
+format: yolo
+resolution_ratio: 1
+rgb_size: [512, 640]
+ir_size: [512, 640]
+ir_interpolation: area
+ir_antialias: true

@@ -1,0 +1,48 @@
+# YOLOv8n-style RGB/IR dual-stream baseline with direct feature concatenation.
+# 两个轻量 Backbone 分别提取 RGB/IR 特征，在 P2/P3/P4/P5 直接拼接，
+# 再用 1x1 卷积统一通道数，后面复用原 YOLOv8 Neck 和 Detect Head。
+
+nc: 2
+ch: 6
+dual_stream: true
+resolution_ratio: 1
+fusion_type: concat
+use_adapter: false
+use_gate: false
+use_spatial_gate: false
+
+scales:
+  n: [0.33, 0.25, 1024]
+
+backbone:
+  - [-1, 1, Conv, [64, 3, 2]]
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [-1, 3, C2f, [128, True]]
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [-1, 6, C2f, [256, True]]
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [-1, 6, C2f, [512, True]]
+  - [-1, 1, Conv, [1024, 3, 2]]
+  - [-1, 3, C2f, [1024, True]]
+  - [-1, 1, SPPF, [1024, 5]]
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 6], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 2], 1, Concat, [1]]
+  - [-1, 3, C2f, [128]]
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [[-1, 15], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 12], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 9], 1, Concat, [1]]
+  - [-1, 3, C2f, [1024]]
+  - [[18, 21, 24, 27], 1, Detect, [nc]]
