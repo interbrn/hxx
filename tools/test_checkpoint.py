@@ -6,8 +6,8 @@ import os
 import sys
 from pathlib import Path
 
-# 无论从哪个目录启动，都优先使用本科项目自己的 ultralytics 修改版。
-# 否则从原始师兄代码目录启动时，Python 可能误加载另一套旧代码。
+# 无论从哪个目录启动，均优先加载仓库内的本地 Ultralytics 修改版。
+# 这样可以避免因环境中存在其他代码副本而产生版本不一致。
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 os.environ["YOLO_CONFIG_DIR"] = str((PROJECT_ROOT / ".yolo_config").resolve())
 os.environ["MPLCONFIGDIR"] = str((PROJECT_ROOT / ".matplotlib").resolve())
@@ -57,8 +57,8 @@ def main():
     data["rgb_size"] = list(args.imgsz)
     ratio = int(data.get("resolution_ratio", 1))
     data["ir_size"] = [max(1, args.imgsz[0] // ratio), max(1, args.imgsz[1] // ratio)]
-    # 标签扫描缓存统一放在本科项目根目录，不写入原始数据集，
-    # 也避免 train 和 test 各生成一份重复缓存。
+    # 标签扫描缓存统一写入项目目录，不修改原始数据集，
+    # 并避免训练和测试分别生成重复缓存。
     data["cache_dir"] = str((PROJECT_ROOT / ".dataset_cache").resolve())
 
     test_split = data.get("test")

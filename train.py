@@ -12,64 +12,7 @@ import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-
-
-EXPERIMENTS = {
-    "rgb": {
-        "tag": "rgb",
-        "smoke_data": "configs/rgbt3m_grouped_rgb_smoke.yaml",
-        "full_data": "configs/rgbt3m_grouped_rgb.yaml",
-        "model": "configs/yolov8n_dual_concat.yaml",
-    },
-    "ir": {
-        "tag": "ir",
-        "smoke_data": "configs/rgbt3m_grouped_ir_smoke.yaml",
-        "full_data": "configs/rgbt3m_grouped_ir.yaml",
-        "model": "configs/yolov8n_dual_concat.yaml",
-    },
-    "ratio1_concat": {
-        "tag": "ratio1_concat",
-        "smoke_data": "configs/rgbt3m_grouped_ratio1_smoke.yaml",
-        "full_data": "configs/rgbt3m_grouped_ratio1.yaml",
-        "model": "configs/yolov8n_dual_concat.yaml",
-    },
-    "ratio1_gated": {
-        "tag": "ratio1_gated",
-        "smoke_data": "configs/rgbt3m_grouped_ratio1_smoke.yaml",
-        "full_data": "configs/rgbt3m_grouped_ratio1.yaml",
-        "model": "configs/hierafire_gated.yaml",
-    },
-    "ratio2_concat": {
-        "tag": "ratio2_concat",
-        "smoke_data": "configs/rgbt3m_ratio2_grouped_smoke.yaml",
-        "full_data": "configs/rgbt3m_ratio2_grouped.yaml",
-        "model": "configs/yolov8n_dual_concat_ratio2.yaml",
-    },
-    "ratio2_simple": {
-        "tag": "ratio2_simple",
-        "smoke_data": "configs/rgbt3m_ratio2_grouped_smoke.yaml",
-        "full_data": "configs/rgbt3m_ratio2_grouped.yaml",
-        "model": "configs/yolov8n_dual_simple_ratio2.yaml",
-    },
-    "ratio2_adapter": {
-        "tag": "ratio2_adapter",
-        "smoke_data": "configs/rgbt3m_ratio2_grouped_smoke.yaml",
-        "full_data": "configs/rgbt3m_ratio2_grouped.yaml",
-        "model": "configs/yolov8n_dual_adapter_ratio2.yaml",
-    },
-    "ratio2_gated": {
-        "tag": "ratio2_gated",
-        "smoke_data": "configs/rgbt3m_ratio2_grouped_smoke.yaml",
-        "full_data": "configs/rgbt3m_ratio2_grouped.yaml",
-        "model": "configs/yolov8n_dual_gated_ratio2.yaml",
-    },
-    "hierafire": {
-        "tag": "hierafire",
-        "smoke_data": "configs/rgbt3m_grouped_ratio1_smoke.yaml",
-        "full_data": "configs/rgbt3m_grouped_ratio1.yaml",
-        "model": "configs/hierafire.yaml",
-    },
-}
+from tools.experiment_registry import EXPERIMENT_REGISTRY as EXPERIMENTS
 
 
 PROFILES = {
@@ -186,7 +129,7 @@ def apply_profile(args):
         if experiment is None:
             raise ValueError(f"未知实验模式: {args.experiment}")
         defaults = dict(PROFILES[args.profile])
-        split_key = "smoke_data" if args.profile == "local_cpu" else "full_data"
+        split_key = "local_data" if args.profile == "local_cpu" else "full_data"
         defaults["data"] = experiment[split_key]
         defaults["model"] = experiment["model"]
         tag = experiment["tag"]
@@ -267,6 +210,10 @@ def main():
             "test_after_train": args.test_after_train,
         }, ensure_ascii=False, indent=2))
         return
+    # CPU 没有异步显存拷贝，关闭 pin_memory 可避免无效的 pinned-memory 警告；
+    # server_full 使用 CUDA 时保留 Ultralytics 的 pin_memory 优化。
+    from ultralytics.data import build as data_build
+    data_build.PIN_MEMORY = str(args.device).lower() not in {"cpu", "-1"}
     cv2.setNumThreads(0)
     data_root = resolve_project_path(args.data_root)
     data_config = resolve_project_path(args.data)

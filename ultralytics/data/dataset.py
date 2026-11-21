@@ -1,7 +1,7 @@
 """
 RGBT-3M 火情检测数据集模块。
 
-本文件是本毕设的数据入口：它按照同一个样本编号同时读取 RGB 图像、
+本文件是本项目的数据入口：它按照同一个样本编号同时读取 RGB 图像、
 热红外图像和 YOLO 标签，保证两种模态经过相同的几何增强，并根据
 ``resolution_ratio`` 控制红外分辨率。最终输出 6 通道图像：
 红外 3 通道 + RGB 3 通道，供双流检测模型使用。
@@ -548,7 +548,7 @@ class RandomHSV6Channel:
         
         # 处理6通道输入 (FLAME2Dataset 始终返回6通道)
         if img.shape[2] == 6:
-            # 始终保护 IR 通道 (3-5)
+            # 保留 IR 通道（索引 3–5）。
             rgb = np.ascontiguousarray(img[:, :, :3])
             ir = img[:, :, 3:]
             
@@ -673,7 +673,7 @@ class FLAME2Dataset(BaseDataset):
         if self.input_mode not in {"dual_input", "rgb_input", "ir_input"}:
             self.input_mode = "dual_input"
         
-        # 始终为 FLAME2Dataset 保持 6 通道输入 (RGB+IR)
+        # FLAME2Dataset 统一保持 6 通道输入（RGB+IR）。
         # 即使是 ir_input 模式，也加载 RGB 图像用于后续可视化
         self.input_channels = 6
             
@@ -683,7 +683,7 @@ class FLAME2Dataset(BaseDataset):
         def modality_root(key):
             configured = Path(data["path"]) / data[key]
             expected_name = Path(str(data[key]).replace("\\", "/")).name.lower()
-            # 从配置路径及其父目录中寻找真正的 RGB/IR/labels 根目录。
+            # 从配置路径及其父目录中解析实际的 RGB/IR/labels 根目录。
             # 这样即使上游把 data['path'] 临时解析到 RGB/val，也能回到 RGB 根目录。
             for candidate in (configured, *configured.parents):
                 if candidate.name.lower() != expected_name:
@@ -897,7 +897,7 @@ class FLAME2Dataset(BaseDataset):
                 nc_f = 0
             
             # 获取图像尺寸 (H, W)
-            # 注意：由于 FLAME2Dataset.load_image 会 resize 图像到 self.img_size
+            # 说明：FLAME2Dataset.load_image 会将图像调整到 self.img_size。
             # 所以这里的 shape 应该是 self.img_size
             img_shape = (self.img_size[0], self.img_size[1])
 
@@ -1013,7 +1013,7 @@ class FLAME2Dataset(BaseDataset):
                 mask_ratio=hyp.mask_ratio if hyp else 4,
                 mask_overlap=hyp.overlap_mask if hyp else 0.5,
                 # bgr=hyp.bgr if (hyp and self.augment) else 0.0, # bgr是通道不反转的概率
-                bgr=0.0, # 设置为始终反转, 即输入为 RGB(IR)RGB(VIS)
+                bgr=0.0,  # 固定通道顺序，输出为 IR_RGB|VIS_RGB。
             )
         )
         return transforms
@@ -1236,7 +1236,7 @@ class RGBT3MDataset(FLAME2Dataset):
         rgb_img = self.load_image(rgb_file, size=self.rgb_size, interpolation=cv2.INTER_LINEAR)
         thermal_img = self.load_paired_thermal(thermal_file) # IR 已经是 3 通道且数值相等
         
-        # 始终构造 6 通道图像 (RGB + IR)，具体输入给模型的模态
+        # 统一构造 6 通道图像（RGB + IR），具体输入模态由配置决定。
         # 由 Trainer/Validator 中的 input_mode 控制切片
         img = np.concatenate([rgb_img, thermal_img], axis=-1)
 

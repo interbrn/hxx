@@ -1,169 +1,154 @@
-# RGBT-3M 跨分辨率火情目标检测
+# RGBT-3M 可见光—红外跨分辨率特征融合
 
-面向毕业设计“面向火情目标检测的可见光—红外跨分辨率特征融合方法研究”的实验代码。
-项目基于 YOLOv8n 风格检测器，使用 RGBT-3M 数据集检测 `fire` 和 `person`，重点研究 RGB/IR 双流检测以及 1∶1、2∶1 跨分辨率特征融合。
+本项目用于毕业设计“面向火情目标检测的可见光—红外跨分辨率特征融合方法研究”。项目基于 YOLOv8n 构建 RGB/IR 双流目标检测器，在 RGBT-3M 数据集上检测 `fire` 和 `person`，研究 1∶1 与 2∶1 跨分辨率条件下的特征融合方法。
 
-## 项目范围
+## 研究约束
 
-- RGB 保持 480×640；2∶1 实验将 IR 缩小为 240×320。
-- 支持 RGB 单模态、IR 单模态、双流直接拼接、等权融合、特征适配和通道/空间门控。
-- 按视频分组划分 train/val/test，避免相邻帧泄漏。
-- 训练完成后使用独立 test 集评估，不把 smoke 结果当作论文最终精度。
-- 训练结果、数据集、缓存和权重默认不提交到 Git；详见 `.gitignore`。
+| 项目 | 约定 |
+|---|---|
+| 数据集 | RGBT-3M |
+| 类别 | `fire`、`person` |
+| RGB | 480×640，保持原始分辨率 |
+| 1∶1 IR | 480×640 |
+| 2∶1 IR | 240×320，宽和高分别缩小一半 |
+| 任务 | 目标检测，不进行图像融合或超分辨率重建 |
+| 评价指标 | Precision、Recall、mAP50、mAP50-95 |
+| 正式训练 | 完整视频分组、100 epoch、独立 test |
 
-## 目录结构
+## 运行模式
 
-```text
-configs/       数据、模型和统一实验参数配置
-demo/          单样本读取、张量和前向传播示例
-docs/          任务书、实验流程、学习路线和检查清单
-splits/        可复现实验划分文件
-tests/         模型、数据集和检查点测试
-tools/         数据划分、模型检查和转换工具
-ultralytics/   本项目使用的本地 Ultralytics 修改版
-train.py       训练入口
-val.py         验证入口
-predict.py     RGB/IR 成对图片预测入口
-profile_flops.py  参数量和 FLOPs 统计
-```
+| profile | 数据 | 设备 | 默认 epoch | 用途 |
+|---|---|---|---:|---|
+| `local_cpu` | micro 视频分组 | CPU | 2 | 本地流程验证 |
+| `server_full` | 完整视频分组 | CUDA | 100 | 正式实验 |
 
-## 环境安装
-
-建议使用 Python 3.9 或更高版本，并先按照 PyTorch 官方文档安装与 CPU/GPU 匹配的 PyTorch 和 torchvision，再安装项目依赖：
-
-```bash
-python -m venv .venv
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-本项目使用本地 `ultralytics/` 代码，不需要另外安装同名 Ultralytics 包。运行入口时请在项目根目录执行，或使用脚本中的项目根目录解析逻辑。
+本地可通过 `--epochs 5` 进行较长 smoke 验证，但任何 micro 或短 epoch 结果都不能作为论文最终结论。
 
 ## 数据集准备
 
-数据集不随代码仓库发布。请准备 RGBT-3M，并保证目录大致如下：
+数据集不随仓库发布。数据集根目录应包含 `RGB/`、`IR/` 和 `labels_fire_person/`。RGB、IR 和标签使用相同的相对文件名。正式实验使用按视频分组的 `train_grouped.txt`、`val_grouped.txt` 和 `test_grouped.txt`，防止相邻视频帧泄漏。配置文件不保存个人电脑路径，运行时通过 `--data-root` 指定数据集根目录。
 
-```text
-<DATASET_ROOT>/
-├── RGB/train/、RGB/val/、RGB/test/
-├── IR/train/、IR/val/、IR/test/
-└── labels_fire_person/
+## 环境安装
+
+建议使用 Python 3.9 或更高版本。先按照 PyTorch 官方安装说明安装与设备匹配的 PyTorch 和 torchvision，再安装项目依赖：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements-cpu.txt
 ```
 
-划分文件位于 `splits/`。配置文件中的 `train`、`val`、`test` 使用项目相对路径，`train.py` 和 `val.py` 会自动解析到项目根目录；`--data-root` 只需要指向数据集根目录。
+服务器环境应先按照 CUDA 版本安装匹配的 PyTorch 和 torchvision，再执行 `python -m pip install -r requirements.txt`。项目直接使用仓库内的 `ultralytics/`，不需要额外安装同名外部包。
 
-## 快速检查
+## 运行前检查
+
+```powershell
+python tools/validate_project.py `
+  --data-root D:\path\to\RGBT-3M `
+  --profile local_cpu `
+  --experiments core
+```
+
+该命令不启动训练，检查数据目录、类别、划分文件、代表性样本、RGB/IR 尺寸和模型配置。
+
+## 本地 CPU 流程
+
+```powershell
+python tools/run_experiments.py `
+  --profile local_cpu `
+  --data-root D:\path\to\RGBT-3M `
+  --experiments core `
+  --epochs 5 `
+  --run-tag local_cpu_5epoch `
+  --dry-run
+```
+
+确认命令后删除 `--dry-run` 启动训练。核心矩阵包含 RGB 单模态、IR 单模态、1∶1 直接拼接、2∶1 直接拼接、2∶1 等权融合、2∶1 特征适配和 2∶1 门控融合。
+
+单独运行一个实验：
+
+```powershell
+python train.py `
+  --profile local_cpu `
+  --experiment ratio2_gated `
+  --data-root D:\path\to\RGBT-3M `
+  --epochs 5
+```
+
+## 服务器完整数据流程
 
 ```bash
-python tools/check_model_variants.py
-pytest -q
+python tools/validate_project.py \
+  --data-root /data/RGBT-3M \
+  --profile server_full \
+  --experiments core
+
+python tools/run_experiments.py \
+  --profile server_full \
+  --data-root /data/RGBT-3M \
+  --experiments core \
+  --device 0 \
+  --dry-run
 ```
 
-上面命令只检查模型构建、前向传播、数据读取和小规模单元测试，不会启动训练。
-
-## CPU smoke 训练
-
-以下命令使用 1∶1 双流直接拼接配置。`<DATASET_ROOT>` 请替换成数据集实际路径：
+确认无误后启动正式实验：
 
 ```bash
-python train.py \
-  --data configs/rgbt3m_grouped_ratio1_smoke.yaml \
-  --model configs/yolov8n_dual_concat.yaml \
-  --data-root <DATASET_ROOT> \
-  --imgsz 480 640 --epochs 2 --batch 1 --nbs 1 \
-  --workers 0 --device cpu --no-amp --augmentation none \
-  --optimizer AdamW --seed 0 --no-aux \
-  --project runs/detect --name ratio1_grouped_smoke_epoch2 \
-  --test-after-train
+python tools/run_experiments.py \
+  --profile server_full \
+  --data-root /data/RGBT-3M \
+  --experiments core \
+  --device 0 \
+  --run-tag server_full_100epoch
 ```
 
-2∶1 门控模型只需替换 `--data` 和 `--model`：
+`server_full` 使用完整视频分组、100 epoch、AdamW、`nbs=64`、余弦学习率和 nonmosaic 增强。显存不足时可以降低 `--batch`，但应记录实际 batch 和梯度累积参数。`--experiments all` 会额外运行 `ratio1_gated` 和 `hierafire`，扩展实验应单独记录。
 
-```text
-configs/rgbt3m_ratio2_grouped_smoke.yaml
-configs/yolov8n_dual_gated_ratio2.yaml
-```
+## 结果保护和断点续训
 
-推荐统一参数见 [`configs/experiment_protocol.yaml`](configs/experiment_protocol.yaml)。正式实验计划为 100 epoch，应在有 NVIDIA GPU 的环境中执行。
+批量入口默认保护已有实验目录：
 
-## 两种运行模式
+1. 存在有效 `test_metrics.json` 时跳过训练；
+2. 只有 `weights/last.pt` 时自动续训；
+3. 只有 `weights/best.pt` 时保留目录，不自动覆盖；
+4. 只有显式使用 `--force` 才允许重新训练。
 
-训练入口已经把本地 CPU 和服务器正式实验分成两个 profile。`--experiment` 选择任务书中的模式，`--profile` 选择运行环境；未显式填写的路径、epoch、batch、增强和测试参数会自动补齐。
+每个完整运行目录应包含 `weights/best.pt`、`weights/last.pt`、`results.csv`、`results.png`、`test_metrics.json` 和 `experiment_manifest.json`。训练、测试、缓存和临时文件默认写入项目目录，不应提交到 GitHub。
 
-本地电脑只跑 smoke：
-
-```bash
-python train.py --profile local_cpu --experiment ratio2_gated \
-  --data-root <DATASET_ROOT>
-```
-
-服务器跑完整分组数据和 100 epoch：
-
-```bash
-python train.py --profile server_full --experiment ratio2_gated \
-  --data-root <DATASET_ROOT> --device 0 --batch 16 --workers 4
-```
-
-可选 `--experiment`：
-
-```text
-rgb             RGB 单模态
-ir              IR 单模态
-ratio1_concat   1∶1 双流直接拼接
-ratio1_gated    1∶1 门控融合
-ratio2_concat   2∶1 双流直接拼接
-ratio2_simple   2∶1 固定等权融合
-ratio2_adapter  2∶1 特征适配
-ratio2_gated    2∶1 通道+空间门控
-hierafire       HieraFire 扩展模型
-```
-
-先检查选择是否正确而不启动训练：
-
-```bash
-python train.py --profile server_full --experiment ratio2_adapter \
-  --data-root <DATASET_ROOT> --dry-run
-```
-
-每次训练完成后，运行目录还会保存 `experiment_manifest.json`，记录 profile、实验模式、数据配置、模型配置和实际训练参数，方便服务器结果回溯。
-
-如果服务器需要依次跑完全部模式，可以使用批量入口：
-
-```bash
-python tools/run_experiments.py --profile server_full \
-  --data-root <DATASET_ROOT> --experiments all --device 0
-```
-
-本地只验证部分模式时可以缩小范围：
-
-```bash
-python tools/run_experiments.py --profile local_cpu \
-  --data-root <DATASET_ROOT> \
-  --experiments ratio1_concat ratio2_concat ratio2_adapter ratio2_gated
-```
-
-批量启动前建议先加 `--dry-run` 检查命令列表。
-
-## 独立测试
-
-如果训练已经完成，可使用 `tools/test_checkpoint.py`，不重新训练：
+## 独立测试和审计
 
 ```bash
 python tools/test_checkpoint.py \
   --weights runs/detect/<RUN_NAME>/weights/best.pt \
-  --data configs/rgbt3m_ratio2_grouped_smoke.yaml \
-  --data-root <DATASET_ROOT> \
-  --device cpu --project runs/detect --name <RUN_NAME>_test
+  --data configs/rgbt3m_ratio2_grouped.yaml \
+  --data-root /data/RGBT-3M \
+  --device 0 \
+  --name <RUN_NAME>_test
+
+python tools/audit_run_tag.py \
+  --run-tag server_full_100epoch \
+  --output docs/server_full_100epoch_audit.md
 ```
 
-主要输出包括 `weights/best.pt`、`weights/last.pt`、`results.csv`、`results.png` 和 `test_metrics.json`。
+## 代码检查
 
-## 当前实验说明
+```bash
+python tools/check_model_variants.py
+python -m pytest -q
+git diff --check
+```
 
-本仓库中的短 epoch 和 smoke 结果只用于流程验证、参数调试和消融流程检查。它们不能替代完整数据、统一 100 epoch 和独立 test 集上的正式论文结果。
+## 文档导航
 
-## 许可证与上游代码
+- [完整运行指南](docs/运行指南.md)
+- [配置说明](configs/README.md)
+- [正式训练前检查清单](docs/正式训练前检查清单.md)
+- [消融实验方案](docs/消融实验方案.md)
+- [本机 5 epoch 审计](docs/本机5epoch-smoke审计.md)
+- [复杂度与 CPU 前向记录](docs/复杂度与CPU前向记录.md)
+- [GitHub 上传检查清单](docs/GitHub上传检查清单.md)
 
-项目包含基于 Ultralytics 的本地修改代码。相关文件保留原有 AGPL-3.0 许可声明；发布或再分发前请同时遵守 Ultralytics 及数据集提供方的许可和引用要求。
+CPU micro、smoke 和短 epoch 结果只用于验证代码链路、参数设置和输出归档，不能用于论文主表或最终模型优劣结论。论文正式结果必须来自完整视频分组、统一 100 epoch、相同训练参数和相同独立 test 流程。
+
+项目包含基于 Ultralytics 的本地修改代码。发布或再分发前，应同时遵守 Ultralytics 及 RGBT-3M 数据集提供方的许可和引用要求。

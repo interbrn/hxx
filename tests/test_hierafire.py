@@ -25,6 +25,14 @@ def test_modality_order():
     torch.testing.assert_close(actual, torch.tensor([60, 50, 40, 30, 20, 10]) / 255)
 
 
+def test_ratio2_paired_tensor_accepts_low_resolution_ir():
+    rgb = np.full((32, 32, 3), [10, 20, 30], dtype=np.uint8)
+    ir = np.full((16, 16, 3), [40, 50, 60], dtype=np.uint8)
+    actual = paired_tensor(rgb, ir, [32, 32], resolution_ratio=2)
+    assert actual.shape == (1, 6, 32, 32)
+    torch.testing.assert_close(actual[0, :, 0, 0], torch.tensor([60, 50, 40, 30, 20, 10]) / 255)
+
+
 def test_wildfire_dataset_loads_documented_png_layout(tmp_path):
     rgb_train = tmp_path / "RGB" / "train"
     ir_train = tmp_path / "IR" / "train"
