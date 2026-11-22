@@ -1,0 +1,8 @@
+experiment,trained_epochs,validated_epochs,best_epoch,model_config,data_config,train_pairs,validation_pairs,test_pairs,test_precision,test_recall,test_map50,test_map50_95,best_validation_map50_95
+ratio2_adapter,100,100,75,configs/yolov8n_dual_adapter_ratio2.yaml,configs/rgbt3m_ratio2_grouped.yaml,6937,3094,1189,0.8438738211525536,0.6082598640013271,0.6888695108346006,0.2778021328028962,0.01521
+ratio2_simple,100,100,48,configs/yolov8n_dual_simple_ratio2.yaml,configs/rgbt3m_ratio2_grouped.yaml,6937,3094,1189,0.6849640042270424,0.611661539894244,0.5592242156162504,0.23393147217998447,0.01699
+ratio2_concat,100,100,16,configs/yolov8n_dual_concat_ratio2.yaml,configs/rgbt3m_ratio2_grouped.yaml,6937,3094,1189,0.6112074940617717,0.6710147226159053,0.5882986565008543,0.21645600829998574,0.01777
+ratio2_gated,100,100,21,configs/yolov8n_dual_gated_ratio2.yaml,configs/rgbt3m_ratio2_grouped.yaml,6937,3094,1189,0.39797453872964555,0.40623499436879584,0.40866615481058705,0.1823037960067125,0.01303
+ratio1_concat,100,100,16,configs/yolov8n_dual_concat.yaml,configs/rgbt3m_grouped_ratio1.yaml,6937,3094,1189,0.6385628917761086,0.41230017955829246,0.4326753438137596,0.1301165439686678,0.02237
+ir,100,100,10,configs/yolov8n_dual_concat.yaml,configs/rgbt3m_grouped_ir.yaml,6937,3094,1189,0.2789426253276431,0.5671837576865209,0.22899410675566473,0.0763670930832344,0.0301
+rgb,100,100,3,configs/yolov8n_dual_concat.yaml,configs/rgbt3m_grouped_rgb.yaml,6937,3094,1189,0.26163472913577174,0.2508650519031142,0.2123288154159748,0.05811328495844692,0.00836
