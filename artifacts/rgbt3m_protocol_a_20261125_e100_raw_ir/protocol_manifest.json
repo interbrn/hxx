@@ -1,0 +1,45 @@
+{
+  "epochs": 100,
+  "seed": 0,
+  "splits": {
+    "train": {
+      "pairs": 6574,
+      "fire": 6631,
+      "person": 3451,
+      "small_fire": 4675
+    },
+    "val": {
+      "pairs": 1200,
+      "fire": 1209,
+      "person": 633,
+      "small_fire": 894
+    },
+    "test": {
+      "pairs": 3366,
+      "fire": 3401,
+      "person": 1739,
+      "small_fire": 2447
+    }
+  },
+  "model_selection": "internal validation AP50-95",
+  "small_fire_area_px2_lt": 1024,
+  "small_fire_metric": "COCO bbox AP, 100 detections/image/category",
+  "test_used_for_selection": false,
+  "watermark": "original",
+  "masked_images": 0,
+  "isolated_pairs": 80,
+  "lanes": [
+    [
+      "concat_1to1"
+    ],
+    [
+      "concat_2to1"
+    ],
+    [
+      "rgb"
+    ],
+    [
+      "ir"
+    ]
+  ]
+}

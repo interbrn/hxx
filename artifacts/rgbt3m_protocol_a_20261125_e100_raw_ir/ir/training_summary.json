@@ -1,0 +1,7 @@
+{
+  "epochs": 100,
+  "best_epoch": 25,
+  "phase": "evaluated",
+  "training_epochs_wall_seconds": 6807.58,
+  "train_call_wall_seconds": 6816.789369870909
+}

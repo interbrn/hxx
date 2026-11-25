@@ -71,8 +71,7 @@
 
 - **45-epoch 探路目录**：`runs/orchestration/rgbt3m_protocol_a_20261123_e45_raw_ir`
 - **100-epoch 正式基线目录**：`runs/orchestration/rgbt3m_protocol_a_20261125_e100_raw_ir`（四张 RTX 4090 D 单卡并行训练；由于 45 epoch 已按余弦调度退火到底且第 35 轮关闭了 Mosaic，100 epoch 独立从 COCO 预训练权重重跑完整余弦调度，确保与后续 100 epoch 消融实验严格同口径）
-
-> 按仓库规范，大权重与运行输出目录不上传 Git，仅归档配置、划分清单与评估指标。
+- **100-epoch 归档权重与日志**：已整理至仓库 [`artifacts/rgbt3m_protocol_a_20261125_e100_raw_ir/`](../artifacts/rgbt3m_protocol_a_20261125_e100_raw_ir/)（含四组 `best.pt` 合计 30.2 MB、`results.csv`、`evaluation_metrics.json`、`summary.csv` 与 `protocol_manifest.json`，可直接加载复现与推理）。
 
 ### 2.1 四组对照模型
 
@@ -162,6 +161,8 @@
 > **方法学说明**：内部 `val`（1,200 对）在训练期用于选择 `best.pt`，存在选模偏差，**不作为论文最终测试结论**；本节仅用于观察 100 epoch 收敛特性，以及在去除同视频相邻帧记忆后定位退化的诊断现象。
 
 ### 4.1 训练收敛状态（100 epoch，`results.csv`）
+
+![RGBT-3M 协议 A（100 epoch）训练与验证曲线](assets/rgbt3m_protocol_a_e100_curves.png)
 
 | 模型 | 最佳轮次 | 最佳 AP50 / AP50-95 | ep100 AP50 / AP50-95 | 后 10 轮 AP50-95（均值 ± 标准差） | ep10 → 20 → 30 → 45 → 60 → 80 → 90 → 100 |
 |---|---:|---:|---:|---:|---|

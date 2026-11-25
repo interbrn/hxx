@@ -1,0 +1,8 @@
+{
+  "source": "/home/xuweihang/exp/cross_resolution_fire_detection/runs/orchestration/rgbt3m_fire_site_pilot_20261123/yolov8n_coco.pt",
+  "transferred_tensors_elements": {
+    "rgb": 1112329,
+    "ir": 1112329,
+    "shared_sppf": 165378
+  }
+}
